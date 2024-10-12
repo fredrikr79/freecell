@@ -11,7 +11,7 @@ class Card:
 
     @staticmethod
     def from_string(s: str) -> Card:
-        return Card(Value.from_string(s[:1]), Suit.from_string(s[-1:]))
+        return Card(Value.from_string(s[:-1]), Suit.from_string(s[-1:]))
 
 
 @dataclass(frozen=True)
@@ -49,13 +49,13 @@ class Suit(Enum):
     def is_red(self) -> bool:
         return not self.is_black()
 
-    @classmethod
+    @staticmethod
     def from_string(s: str) -> Suit:
         suit_mappings = {
             "H": Suit.HEARTS,
             "S": Suit.SPADES,
             "D": Suit.DIAMONDS,
-            "C": Suit.DIAMONDS,
+            "C": Suit.CLUBS,
         }
         if s not in suit_mappings:
             raise ValueError("Suit must be one of 'HSDC', was" + s)
