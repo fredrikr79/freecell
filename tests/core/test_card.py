@@ -7,13 +7,13 @@ class TestCard:
         assert (
             cards := [
                 card.Card(card.Value(value), suit)
-                for value in range(1, 14)
                 for suit in card.Suit
+                for value in range(1, 14)
             ]
         ), "All card values 1-13 of all suits must be instantiable"
 
         assert [c.value.get() for c in cards] == (
-            list(range(1, 14)) * len(card.Suit)
+            [v for _ in card.Suit for v in range(1, 14)]
         ), "All values must be set properly"
 
         value_strings: list[str] = (
@@ -21,25 +21,26 @@ class TestCard:
         )
 
         assert [c.value.get() for c in cards] == [
-            card.Value.from_string(s) for s in value_strings for _ in card.Suit
+            card.Value.from_string(s).get() for _ in card.Suit for s in value_strings
         ], "All values must be able to be generated from strings"
 
-        suit_strings: list[str] = [c for c in "HSDC"]
+        suit_strings: list[str] = [s for s in "HSDC"]
 
-        assert [c.suit for c in sorted(cards, key=lambda c: c.suit.name)] == [
+        assert [
+            card.Suit.from_string(s).name[0] for s in suit_strings
+        ] == suit_strings, "All suits must be able to be generated from strings"
+
+        assert [c.suit for c in cards] == [
             c.suit
-            for c in sorted(
-                [
-                    card.Card(card.Value.from_string(vs), card.Suit.from_string(ss))
-                    for vs in value_strings
-                    for ss in suit_strings
-                ],
-                key=lambda c: c.suit.name,
-            )
-        ], "All suits must be able to be generated from strings"
+            for c in [
+                card.Card(card.Value.from_string(vs), card.Suit.from_string(ss))
+                for ss in suit_strings
+                for vs in value_strings
+            ]
+        ], "All suits must be able to be generated from strings to make cards"
 
         card_strings: list[str] = [
-            vs + ss for vs in value_strings for ss in suit_strings
+            vs + ss for ss in suit_strings for vs in value_strings
         ]
 
         assert cards == [
