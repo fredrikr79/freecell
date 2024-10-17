@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "freecell"
+version = "0.1"
+description = "Freecell Solitaire in Pygame with Nix"
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">= 3.8"
+authors = [ 
+    {name = "Fredrik Robertsen", email = "fredrikrobertsen7@gmail.com"}
+]
+
+dependencies = [
+    "pygame-ce"
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest",
+    "pytest-cov",
+    "flake8"
+]
+formatting = [
+    "black",
+    "testing"
+]
+
+
+[tool.setuptools.packages.find]
+where = ["src/"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests/core",
+    "tests/ui"
+]
+
+[tool.black]
+line-length = 79

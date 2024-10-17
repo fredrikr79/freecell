@@ -1,52 +1,49 @@
 {
-  description = "A game of solitaire written in Python with Pygame";
+  description = "A game of solitaire written in Python with Pygame using Nix";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    # nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    pyproject-nix = {
+      url = "github:nix-community/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs }: let 
+  outputs = { self, nixpkgs, pyproject-nix, ... }: let 
+    inherit (nixpkgs) lib;
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-    pypkgs = pkgs.python3Packages;
-    dependencies = with pypkgs; [
-        pygame-ce    # game rendering
-    ];
-    build-system = with pypkgs; [
-        setuptools   # packaging
-    ];
-    nativeCheckInputs = with pypkgs; [
-        # pytestCheckHook
-    ];
-    pytestFlagsArray = [
-
-    ];
-    inherit (pkgs) lib;
+    pyproject = pyproject-nix.lib.project.loadPyproject {
+      projectRoot = ./.;
+    };
+    python = pkgs.python3;
   in {
 
     # packages.x86_64-linux.hello = nixpkgs.legacyPackages.x86_64-linux.hello;
     #
     # packages.x86_64-linux.default = self.packages.x86_64-linux.hello;
 
-    packages.${system}.default = pypkgs.buildPythonApplication {
-        name = "freecell";
+    packages.${system}.default = let
+      attrs = pyproject.renderers.buildPythonPackage { inherit python; };
+    in python.pkgs.buildPythonApplication (attrs // {
+      extrasAttrMappings = {
+        testing = "checkInputs";
+      };
+    });
 
-        inherit nativeCheckInputs build-system dependencies; 
-
-        src = lib.sources.cleanSource ./.;
+    apps.${system}.default = {
+        type = "app";
+        program = "self.packages.${system}.default/bin/freecell";
     };
 
-    # apps.${system}.default = {
-    #     type = "app";
-    #     program = packages.${system}.default = 
-    # };
-
-    devShells.${system}.default = pkgs.mkShell {
-        packages = with pypkgs; [
-            black        # auto-formatting
-            flake8       # style and code quality
-            coverage     # test-coverage
-        ] ++ dependencies ++ build-system ++ nativeCheckInputs;
+    devShells.${system}.default = let 
+      arg = pyproject.renderers.withPackages { 
+        inherit python; 
+        extras = builtins.attrNames pyproject.optional-dependencies.formatting;
+      };
+      pythonEnv = python.withPackages (arg);
+    in pkgs.mkShell {
+        packages = [ pythonEnv. ];
     };
 
   };
